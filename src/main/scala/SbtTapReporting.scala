@@ -20,55 +20,55 @@ class SbtTapListener extends TestsListener {
   var testId = new AtomicInteger(0)
   var fileWriter: FileWriter = _
 
-  override def doInit {
-    new File("test-results").mkdirs()
+  override def doInit = {
+    new File("test-results").mkdirs
 
     fileWriter = new FileWriter(
       scala.util.Properties.envOrElse("SBT_TAP_OUTPUT", "test-results/test.tap")
     )
   }
 
-  def startGroup(name: String) {
-    writeTapFields("#", "start", name)
+  def startGroup(name: String) =
+    writeTapDiag("start", name)
+
+  def endGroup(name: String, result: TestResult.Value) =
+    writeTapDiag("end", name, "with result", result.toString.toLowerCase)
+
+  def endGroup(name: String, t: Throwable) = {
+    writeTapDiag("end", name)
+    writeTapDiag(stackTraceForError(t))
   }
 
-  def endGroup(name: String, result: TestResult.Value) {
-    writeTapFields("#", "end", name, "with result", result.toString.toLowerCase)
-  }
-
-  def endGroup(name: String, t: Throwable) {
-    writeTapFields("#", "end", name)
-  }
-
-  def testEvent(event: TestEvent) {
+  def testEvent(event: TestEvent) = {
     event.detail.foreach { e: TEvent =>
       e.result match {
-        case TResult.Success => writeTapFields("ok", testId.incrementAndGet(), "-", e.testName())
+        case TResult.Success => writeTap("ok", testId.incrementAndGet, "-", e.testName)
         case TResult.Error | TResult.Failure =>
-          writeTapFields("not ok", testId.incrementAndGet(), "-", e.testName())
-          // According to the TAP spec, as long as there is any kind of whitespace, this output should belong to the
-          // the test that failed and it should get displayed in the UI.
-          // TODO:It would be nice if we could report the exact line in the test where this happened.
-          writeTapFields(" ", stackTraceForError(e.error()))
+          writeTap("not ok", testId.incrementAndGet, "-", e.testName)
+          // TODO: It would be nice if we could report the exact line in the test where this happened.
+          writeTapDiag(stackTraceForError(e.error))
         case TResult.Skipped =>
           // it doesn't look like this framework distinguishes between pending and ignored.
-          writeTapFields("ok", testId.incrementAndGet(), e.testName(), "#", "skip", e.testName())
+          writeTap("ok", testId.incrementAndGet, e.testName, "#", "skip", e.testName)
       }
     }
   }
 
-  override def doComplete(finalResult: TestResult.Value) {
-    writeTapFields("1.." + testId.get)
-    fileWriter.close()
+  override def doComplete(finalResult: TestResult.Value) = {
+    writeTap("1.." + testId.get)
+    fileWriter.close
   }
 
-  private def writeTapFields(s: Any*) {
-    fileWriter.write(s.mkString("",  " ", "\n"))
-    fileWriter.flush()
+  private def writeTap(s: Any*) = {
+    fileWriter.write(s.mkString("", " ", "\n"))
+    fileWriter.flush
   }
+
+  private def writeTapDiag(s: Any*) =
+    writeTap("#", s.mkString("", " ", "\n").trim.replaceAll("\\n", "\n# "))
 
   private def stackTraceForError(t: Throwable): String = {
-    val sw = new StringWriter()
+    val sw = new StringWriter
     val printWriter = new PrintWriter(sw)
     t.printStackTrace(printWriter)
     sw.toString
