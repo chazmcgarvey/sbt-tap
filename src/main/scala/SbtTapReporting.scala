@@ -28,7 +28,17 @@ class SbtTapListener extends TestsListener {
     )
   }
 
-  def startGroup(name: String) {}
+  def startGroup(name: String) {
+    writeTapFields("#", "start", name)
+  }
+
+  def endGroup(name: String, result: TestResult.Value) {
+    writeTapFields("#", "end", name, "with result", result.toString.toLowerCase)
+  }
+
+  def endGroup(name: String, t: Throwable) {
+    writeTapFields("#", "end", name)
+  }
 
   def testEvent(event: TestEvent) {
     event.detail.foreach { e: TEvent =>
@@ -63,7 +73,4 @@ class SbtTapListener extends TestsListener {
     t.printStackTrace(printWriter)
     sw.toString
   }
-  def endGroup(name: String, t: Throwable) { }
-
-  def endGroup(name: String, result: TestResult.Value) { }
 }
