@@ -23,7 +23,9 @@ class SbtTapListener extends TestsListener {
   override def doInit {
     new File("test-results").mkdirs()
 
-    fileWriter = new FileWriter("test-results/test.tap")
+    fileWriter = new FileWriter(
+      scala.util.Properties.envOrElse("SBT_TAP_OUTPUT", "test-results/test.tap")
+    )
   }
 
   def startGroup(name: String) {}
