@@ -21,11 +21,10 @@ class SbtTapListener extends TestsListener {
   var fileWriter: FileWriter = _
 
   override def doInit = {
-    new File("test-results").mkdirs
-
-    fileWriter = new FileWriter(
-      scala.util.Properties.envOrElse("SBT_TAP_OUTPUT", "test-results/test.tap")
-    )
+    val filename = scala.util.Properties.envOrElse("SBT_TAP_OUTPUT", "test-results/test.tap")
+    val file = new File(filename)
+    new File(file.getParent).mkdirs
+    fileWriter = new FileWriter(file)
   }
 
   def startGroup(name: String) =
