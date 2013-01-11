@@ -52,7 +52,10 @@ class SbtTapListener extends TestsListener {
     fileWriter.close()
   }
 
-  private def writeTapFields(s: Any*) { fileWriter.write(s.mkString("",  " ", "\n")) }
+  private def writeTapFields(s: Any*) {
+    fileWriter.write(s.mkString("",  " ", "\n"))
+    fileWriter.flush()
+  }
 
   private def stackTraceForError(t: Throwable): String = {
     val sw = new StringWriter()
