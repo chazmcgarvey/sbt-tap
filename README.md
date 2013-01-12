@@ -24,7 +24,7 @@ To use:
    listeners.
 
    ```scala
-   testListeners += SbtTapReporting.tapListener
+   testListeners += SbtTapReporting()
    ```
 
 3. Optionally, in a UNIX environment, you can set up a named pipe for
