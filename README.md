@@ -1,6 +1,6 @@
 This sbt plug-in provides reporting of test success and failure for tests run by
 [simple build tool](https://github.com/sbt/sbt)
-in [TAP](http://search.cpan.org/perldoc?Test%3A%3AHarness%3A%3ATAP) format.
+in [TAP](http://search.cpan.org/perldoc?TAP%3A%3AParser%3A%3AGrammar) format.
 
 All the test results will be generated in one file, the path of which may be
 specified in the `SBT_TAP_OUTPUT` environment variable.  If unspecified in the

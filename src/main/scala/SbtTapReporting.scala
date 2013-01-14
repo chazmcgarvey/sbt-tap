@@ -25,6 +25,7 @@ class SbtTapListener extends TestsListener {
     val file = new File(filename)
     new File(file.getParent).mkdirs
     fileWriter = new FileWriter(file)
+    writeTap("TAP", "version", 13)
   }
 
   def startGroup(name: String) =
@@ -40,15 +41,16 @@ class SbtTapListener extends TestsListener {
 
   def testEvent(event: TestEvent) = {
     event.detail.foreach { e: TEvent =>
+      val description = e.testName.replaceAll("#", "%23")
       e.result match {
-        case TResult.Success => writeTap("ok", testId.incrementAndGet, "-", e.testName)
+        case TResult.Success =>
+          writeTap("ok", testId.incrementAndGet, "-", description)
+        case TResult.Skipped =>
+          writeTap("ok", testId.incrementAndGet, "-", description, "# SKIP")
         case TResult.Error | TResult.Failure =>
-          writeTap("not ok", testId.incrementAndGet, "-", e.testName)
+          writeTap("not ok", testId.incrementAndGet, "-", description)
           // TODO: It would be nice if we could report the exact line in the test where this happened.
           writeTapDiag(stackTraceForError(e.error))
-        case TResult.Skipped =>
-          // it doesn't look like this framework distinguishes between pending and ignored.
-          writeTap("ok", testId.incrementAndGet, e.testName, "#", "skip", e.testName)
       }
     }
   }
