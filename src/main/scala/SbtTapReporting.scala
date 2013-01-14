@@ -17,7 +17,7 @@ object SbtTapReporting extends Plugin {
  * the current active group might be one way to go.
  */
 class SbtTapListener extends TestsListener {
-  var testId = new AtomicInteger(0)
+  var testId = 0
   var fileWriter: FileWriter = _
 
   override def doInit = {
@@ -39,24 +39,29 @@ class SbtTapListener extends TestsListener {
     writeTapDiag(stackTraceForError(t))
   }
 
-  def testEvent(event: TestEvent) = {
-    event.detail.foreach { e: TEvent =>
-      val description = e.testName.replaceAll("#", "%23")
+  def testEvent(event: TestEvent) = this.synchronized {
+    event.detail.foreach { e: TEvent => testId += 1
+      var modified = false
+      val description = (if (e.testName.contains("#")) {
+        modified = true
+        e.testName.replaceAll("#", "")
+      } else e.testName).replaceAll("\n", "")
       e.result match {
         case TResult.Success =>
-          writeTap("ok", testId.incrementAndGet, "-", description)
+          writeTap("ok", testId, "-", description)
         case TResult.Skipped =>
-          writeTap("ok", testId.incrementAndGet, "-", description, "# SKIP")
+          writeTap("ok", testId, "-", description, "# SKIP")
         case TResult.Error | TResult.Failure =>
-          writeTap("not ok", testId.incrementAndGet, "-", description)
+          writeTap("not ok", testId, "-", description)
           // TODO: It would be nice if we could report the exact line in the test where this happened.
           writeTapDiag(stackTraceForError(e.error))
       }
+      if (modified) writeTapDiag("warning: hash character(s) removed from test " + testId + " description")
     }
   }
 
   override def doComplete(finalResult: TestResult.Value) = {
-    writeTap("1.." + testId.get)
+    writeTap("1.." + testId)
     fileWriter.close
   }
 
